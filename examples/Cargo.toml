@@ -31,6 +31,12 @@ kya-adapter-ap2 = { path = "../crates/kya-adapter-ap2", version = "0.1.0" }
 # [[example]] targets of this crate.
 ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }
 
+# The single recommended primary example: the full verify -> evaluate ->
+# authorize walkthrough through the kya-sdk facade. See docs/demo.md.
+[[example]]
+name = "demo"
+path = "demo.rs"
+
 [[example]]
 name = "offline_evaluation"
 path = "offline_evaluation.rs"

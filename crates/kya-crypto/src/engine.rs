@@ -8,7 +8,7 @@
 //!    [`TrustedKeyStore`], and confirm the same pair is anchored in the
 //!    caller's [`kya_core::identity::TrustAnchors`]. An unknown issuer, an
 //!    unbound key, or an unanchored pair fails closed.
-//! 2. **Signature verification through the sealed mint-point.** Run the
+//! 2. **Signature verification through the crate-private mint-point.** Run the
 //!    concrete [`Ed25519SignatureVerifier`] through this crate's
 //!    [`crate::evidence`] mint-point ([`run_verifier`]) so the resulting
 //!    verified outcome carries the unforgeable proof. The mint-point is
@@ -165,10 +165,10 @@ pub fn verify_delegation(
         return Err(CryptoVerificationError::UntrustedKey);
     }
 
-    // (2) Verify the signature THROUGH the sealed kya-core mint-point so the
-    // outcome carries the unforgeable proof. A verified outcome asserts
-    // authenticity only; trust was checked above and is re-checked by
-    // `establish`.
+    // (2) Verify the signature THROUGH the crate-private kya-crypto mint-point
+    // (`run_verifier`) so the outcome carries the unforgeable proof. A verified
+    // outcome asserts authenticity only; trust was checked above and is
+    // re-checked by `establish`.
     let algorithm = AlgorithmId::new(ACCEPTED_ALGORITHM)?;
     let context = VerificationContext::new(issuer.clone(), key_ref.clone(), algorithm);
     let verifier = Ed25519SignatureVerifier::new();
@@ -237,7 +237,7 @@ pub struct SignedMandate<'a> {
 ///
 /// 1. **Key resolution + trust check** of the claimed `(issuer, key_ref)`,
 ///    exactly as [`verify_delegation`].
-/// 2. **Signature verification through the sealed mint-point** over the
+/// 2. **Signature verification through the crate-private mint-point** over the
 ///    **canonical encoding of the mandate** ([`Mandate::canonical_encoding`]),
 ///    not over arbitrary caller bytes. A signature that was computed over a
 ///    different payload will not verify here.
@@ -299,7 +299,7 @@ pub fn verify_mandate(
     }
 
     // (2) Verify the signature over EXACTLY the mandate's canonical encoding,
-    // through the sealed kya-core mint-point.
+    // through the crate-private kya-crypto mint-point (`run_verifier`).
     let algorithm = AlgorithmId::new(ACCEPTED_ALGORITHM)?;
     let context = VerificationContext::new(issuer.clone(), key_ref.clone(), algorithm);
     let verifier = Ed25519SignatureVerifier::new();

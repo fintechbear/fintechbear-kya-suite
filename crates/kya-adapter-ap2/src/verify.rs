@@ -169,7 +169,7 @@ pub struct Ap2SignedMandateBinding<'a> {
 /// mandate evaluated is provably the one whose canonical bytes were signed, so a
 /// substituted mandate cannot be slipped into evaluation. It routes through
 /// [`kya_crypto::verify_mandate`], which verifies the Ed25519 signature over the
-/// derived canonical encoding through the sealed `kya-core` mint-point,
+/// derived canonical encoding through the crate-private `kya-crypto` mint-point,
 /// trust-anchors the key, checks audience / validity / binding, and mints the
 /// [`VerifiedMandate`] only when the signed bytes equal the mandate's canonical
 /// encoding. It never reads the system clock; `now` is injected.

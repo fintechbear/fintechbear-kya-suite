@@ -29,7 +29,16 @@ network or standards body.
 
 ## Run the example first
 
-The quickest way to see a real verification is to run a compiling example:
+The quickest way to see a real verification is to run the recommended primary
+demo, which drives the whole verify -> evaluate -> authorize flow and narrates
+each stage A-E:
+
+```sh
+cargo run -p kya-examples --example demo
+```
+
+See [demo.md](demo.md) for a plain-language walkthrough with the real captured
+output. To focus on just stage B, run the narrower signed-evidence example:
 
 ```sh
 cargo run -p kya-examples --example example_02_verify_signed_evidence

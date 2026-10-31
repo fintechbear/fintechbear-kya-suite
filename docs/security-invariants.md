@@ -199,44 +199,49 @@ realized by the `kya-crypto` engine; see
 - A failing security test is a blocker; it is fixed in the code, not deleted,
   skipped, or loosened. Security-sensitive changes add or update regression tests.
 
-### INV-18 — A `Verified` outcome can be minted only by a sanctioned real verifier. (enforced)
+### INV-18 — A `Verified` outcome can be minted only by the reviewed concrete verifier inside `kya-crypto`. (enforced)
 - **Stage(s):** B. **Rules:** section 1, Rules 9, 10, 11, 12, 17.
-- A `VerificationOutcome` whose status is `Verified` can be minted **only** by
-  the sealed `kya_core::verification::verify_signature` mint-point, and that
-  mint-point accepts only a **sanctioned** verifier. This is a capability seal,
-  not merely a direct-construction seal:
-  - `verify_signature` is generic over `V: SanctionedVerifier` and additionally
-    requires an unforgeable `VerifierSanction` capability token. `VerifierSanction`
-    has a private, unnameable field and its only constructor is
-    `VerifierSanction::grant::<V: SanctionedVerifier>()`.
-  - `SanctionedVerifier` is a sealed trait (`SanctionedVerifier: SignatureVerifier
-    + sealed::Sealed`) whose private supertrait no external crate can satisfy
-    through the public API. The single blessed implementor is
-    `kya_crypto::Ed25519SignatureVerifier`, sanctioned once through the narrow,
-    `#[doc(hidden)]` `kya_core::sanction_verifier!` seam.
-  - Consequently an arbitrary `SignatureVerifier` — for example a malicious
-    always-`Verified` verifier defined in another crate — **cannot even be passed**
-    to the mint-point: forgery is a **compile-time** error, not a runtime check.
+- A `kya_crypto::VerificationOutcome` whose status is `Verified`, and the
+  verified evidence built on it (`VerifiedDelegation`, `VerifiedMandate`), can be
+  minted **only** by constructors that live **inside `kya-crypto`** and are bound
+  to the one reviewed concrete verifier `Ed25519SignatureVerifier`. This is a
+  Rust visibility wall, not a runtime check:
+  - The only mint-points — `VerificationProof::new`, `VerificationOutcome::verified`,
+    the crate-private `run_verifier`, and `VerifiedDelegation::establish` /
+    `VerifiedMandate::establish` — are all `pub(crate)` or private to
+    `kya-crypto`. No external crate can name or reach them. `VerificationProof`
+    additionally has a private, unnameable zero-sized `Sealed` field, so it has
+    no external constructor.
+  - `run_verifier` (the only thing that mints a verified outcome) takes
+    `&Ed25519SignatureVerifier` by **concrete type** — there is no generic
+    parameter and no registration door. An arbitrary `SignatureVerifier` — for
+    example a malicious always-`Verified` verifier defined in another crate —
+    **cannot even be passed** to it. It can describe a `Verified` status, but
+    `kya-core` holds no mint-point to promote that report (INV-8), and
+    `kya-crypto` will not run it, so it can never cause verified evidence to be
+    minted.
 - This **supersedes** the earlier trust-anchor-only framing of the forgery
   defense. A trusted public key alone never proves a message was signed with its
   private key (AGENTS.md section 1); trust-anchoring (INV-19) remains a necessary
-  *second*, independent gate, but it is the sanctioned-verifier capability seal
-  that closes threat [T-13](threat-model.md). The proof token's `pub(crate)`
-  constructor and private zero-sized field still block *direct* construction of a
-  `VerificationProof`; the sanction seal additionally blocks *minting via an
-  untrusted verifier*.
-- **Testable as (enforced):**
-  `verification.rs::{verify_signature_mints_verified_only_on_ok_verified,
-  verify_signature_yields_invalid_on_ok_invalid,
-  invalid_constructor_can_never_yield_verified,
-  proof_gated_verified_requires_running_a_sanctioned_verifier}`; the three
-  collected compile-fail doc-tests on `VerificationProof` and `VerifierSanction`
-  (external code can construct neither, and cannot call the mint-point with an
-  arbitrary verifier); and the external-crate suite
-  `kya-crypto/tests/forgery_regression.rs`
-  (`malicious_verifier_answer_is_inert`,
-  `anchored_key_with_bad_signature_still_fails_closed`,
-  `genuine_sanctioned_path_still_establishes_evidence`).
+  *second*, independent gate, but it is the crate-private, concrete-typed
+  mint-point that closes threat [T-13](threat-model.md). `kya-core` holds only
+  the `SignatureVerifier` description seam and cannot name or reach the verified
+  types.
+- **Testable as (enforced):** the external-crate forgery suite
+  `kya-crypto/tests/forgery_regression.rs` (`malicious_verifier_answer_is_inert`,
+  `genuine_sanctioned_path_still_establishes_evidence`,
+  `anchored_key_with_bad_signature_still_fails_closed`); the verified-evidence
+  unit tests in `kya-crypto/src/evidence.rs`
+  (`invalid_outcome_is_not_verified`,
+  `run_verifier_mints_verified_only_on_genuine_match`,
+  `delegation_establishes_when_all_conditions_hold`,
+  `delegation_rejects_untrusted_key_even_when_signature_verifies`,
+  `delegation_rejects_invalid_outcome`, `mandate_rejects_binding_mismatch`); and
+  the `compile_fail` doc-tests on `VerificationProof`, `VerificationOutcome`,
+  `VerifiedDelegation`, and `VerifiedMandate` in `kya-crypto/src/evidence.rs`
+  (external code can construct none of them). `kya-core/src/verification.rs`
+  (`signature_verifier_is_only_a_description_seam`) confirms the seam cannot mint
+  verified evidence.
 
 ### INV-19 — Verified evidence requires trust-anchoring independent of authenticity. (enforced)
 - **Stage(s):** A, B. **Rules:** Rule 11, Rule 12.
@@ -247,8 +252,8 @@ realized by the `kya-crypto` engine; see
   additionally requires the pair to resolve in an explicit
   `kya_crypto::TrustedKeyStore` with no URL fetch and no wildcard.
 - **Testable as (enforced):**
-  `evidence.rs::{malicious_always_verified_verifier_cannot_promote_untrusted_key,
-  rejects_untrusted_key_even_when_signature_verifies, rejects_issuer_mismatch}`,
+  `kya-crypto/src/evidence.rs::{delegation_rejects_untrusted_key_even_when_signature_verifies,
+  delegation_establishes_when_all_conditions_hold}`,
   and `kya-crypto/tests/engine_security.rs` unknown-issuer / untrusted-key cases.
 
 ### INV-20 — Verified claims are bound to an audience, a validity window, and the exact transaction. (enforced in `kya-crypto`)

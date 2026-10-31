@@ -5,8 +5,9 @@
 //! [`verify_mandate`]. A successful call mints an authenticated
 //! [`VerifiedMandate`]: the signature is authentic, the `(issuer, key_ref)` pair
 //! is trust-anchored, and the audience / validity / binding all checked out.
-//! There is no stand-in verifier anywhere; only the reviewed, sanctioned
-//! `Ed25519SignatureVerifier` can reach the sealed `kya-core` mint-point.
+//! There is no stand-in verifier anywhere; only the reviewed
+//! `Ed25519SignatureVerifier` inside `kya-crypto` can reach the crate-private
+//! verified-evidence mint-point, which lives privately in `kya-crypto`.
 //!
 //! What this example does NOT verify: a verified signature is NOT an
 //! authorization. No online authority (stage D) was consulted, so revocation,

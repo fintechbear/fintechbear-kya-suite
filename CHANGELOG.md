@@ -40,12 +40,13 @@ SDK production-ready, audited, or certified.
 
 ### Security
 
-- **Check A - exported-macro verifier bypass fixed at the root.** The sealed
-  `verify_signature` mint-point no longer trusts a downstream-callable exported
-  macro to bless a verifier. The sealed supertrait is genuinely unsatisfiable
-  outside `kya-core`, so an external crate can no longer mint a fake verified
-  outcome from an always-`Verified` verifier. Locked in by an external-crate
-  forgery regression test.
+- **Check A - exported-macro verifier bypass fixed at the root.** The
+  verified-evidence mint-point no longer lives in `kya-core` behind a
+  downstream-callable seam. It was relocated privately into `kya-crypto`, bound
+  to the one reviewed concrete `Ed25519SignatureVerifier`: the mint-point is
+  crate-private and takes the verifier by concrete type, so an external crate
+  can no longer mint a fake verified outcome from an always-`Verified` verifier.
+  Locked in by an external-crate forgery regression test.
 - **Check B - full-mandate cryptographic binding.** Verification now mints a
   `VerifiedMandate` that cryptographically binds the **complete** mandate to the
   signature via the mandate's canonical encoding (an internal, non-standardized,

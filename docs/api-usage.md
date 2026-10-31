@@ -73,7 +73,8 @@ let signed = SignedMandate {
 ### 4. Verify actual cryptographic signatures
 
 `verify_mandate` and `verify_delegation` route through the real `kya-crypto`
-engine and the sealed `kya-core` mint-point. There is no stand-in verifier.
+engine, whose verified-evidence mint-point is owned privately inside
+`kya-crypto`. There is no stand-in verifier.
 
 ```rust,ignore
 let verified: VerifiedMandate = verify_mandate(

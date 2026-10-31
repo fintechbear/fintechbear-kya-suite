@@ -34,7 +34,8 @@
 //!    the validity window).
 //! 4. **Verify actual cryptographic signatures** with [`verify_mandate`] (or
 //!    [`verify_delegation`]), which route through the *real* [`kya_crypto`]
-//!    engine and the sealed `kya-core` mint-point. There is no stand-in.
+//!    engine whose verified-evidence mint-points are owned privately inside
+//!    `kya-crypto`. There is no stand-in.
 //! 5. **Inspect authenticated claims** via the accessors on [`VerifiedMandate`]
 //!    — including [`VerifiedMandate::proof_of_possession`], which honestly
 //!    reports [`ProofOfPossession::NotEstablished`].
