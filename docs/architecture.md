@@ -26,8 +26,8 @@ Dependencies point inward toward `kya-core` (AGENTS.md Rule 2).
           +------------------------v------------------------+
           |                   kya-core                      |
           |  domain + money + identity/trust + scope +      |
-          |  mandate + SignatureVerifier seam + sealed      |
-          |  verify_signature mint-point + evidence +       |
+          |  mandate + SignatureVerifier description seam + |
+          |  evidence (raw claims + view traits) +          |
           |  stage-C policy + Decision/PolicyOutcome        |
           |  (no I/O; depends on nothing in-repo; no crypto)|
           +------------------------^------------------------+
@@ -38,6 +38,7 @@ Dependencies point inward toward `kya-core` (AGENTS.md Rule 2).
           |  (RFC 8032) + JWS-EdDSA (RFC 7515/7518/8037)    |
           |  verification + TrustedKeyStore + the restricted|
           |  verify_delegation path to verified evidence    |
+          |  (crate-private verified-evidence mint-points)  |
           +-------------------------------------------------+
 
           +-------------------------------------------------+
@@ -111,9 +112,12 @@ The user-facing concerns are separated as follows:
   `kya_core::verification::SignatureVerifier` trait and implements no
   cryptographic algorithm. The concrete, standard, reviewed engine lives in the
   **`kya-crypto` outer-ring crate** (AGENTS.md Rule 10), which supplies Ed25519
-  (RFC 8032) and JWS-EdDSA verification behind that seam. The core also owns the
-  sealed `verify_signature` mint-point and the `VerifiedDelegation::establish`
-  gate, so a verified outcome cannot be forged by an outside crate. See
+  (RFC 8032) and JWS-EdDSA verification behind that seam. `kya-crypto` also owns
+  the crate-private verified-evidence mint-points (`run_verifier`, the verified
+  `VerificationOutcome` constructor, and `VerifiedDelegation::establish` /
+  `VerifiedMandate::establish`), bound to its one concrete verifier, so a
+  verified outcome cannot be forged by an outside crate; `kya-core` holds only
+  the description seam. See
   [cryptographic-architecture.md](cryptographic-architecture.md).
 - **Identity and trust evaluation.** `kya_core::identity`, with explicit,
   allow-listed trust anchors. Trust is never implicit or wildcard (Rule 11).
@@ -154,9 +158,9 @@ reordered into a shortcut, or collapsed into one another.
 - **Stage A - Identity.** Resolve who the agent and issuer claim to be, against
   explicit trust anchors.
 - **Stage B - Signature verification.** Verify the cryptographic authenticity of
-  the signed mandate or request. `kya-core` defines the seam and the sealed
-  `verify_signature` mint-point; the concrete Ed25519 / JWS-EdDSA engine is the
-  outer-ring `kya-crypto` crate (see
+  the signed mandate or request. `kya-core` defines the description seam only;
+  the concrete Ed25519 / JWS-EdDSA engine, and the crate-private verified-evidence
+  mint-points, are in the outer-ring `kya-crypto` crate (see
   [cryptographic-architecture.md](cryptographic-architecture.md)). A verified
   signature is **not** an authorization.
 - **Stage C - Static policy evaluation.** Deterministic, offline scope and limit

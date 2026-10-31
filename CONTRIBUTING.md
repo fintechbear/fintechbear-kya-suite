@@ -84,8 +84,26 @@ cargo test --doc --workspace
 cargo doc --workspace --no-deps
 ```
 
-All of them must pass before you open a pull request. `clippy` runs with
+All five of them must pass before you open a pull request. `clippy` runs with
 `-D warnings`, so warnings are errors.
+
+### Running the examples
+
+The fastest way to see the whole verify -> evaluate -> authorize flow is the
+single recommended primary demo, which narrates each stage A-E:
+
+```sh
+cargo run -p kya-examples --example demo
+```
+
+See [docs/demo.md](docs/demo.md) for a plain-language walkthrough with the real
+captured output. The numbered `examples/example_01..10` files drill into
+individual facets (trust configuration, verification, policy evaluation, the
+stage-D bridge, and the experimental AP2 adapter). Build them all with:
+
+```sh
+cargo build -p kya-examples --examples
+```
 
 ### Windows build note (MSVC)
 
@@ -134,7 +152,7 @@ crate. See [AGENTS.md](AGENTS.md) for the complete list.
 - Write clear commit messages that explain the why, not just the what.
 - Describe in the pull request what changed, what you tested, and any security
   implications.
-- Make sure the four gates pass locally before requesting review.
+- Make sure the five gates pass locally before requesting review.
 - A failing security test is a blocker, not a nuisance. Do not disable or loosen
   it to get CI green.
 

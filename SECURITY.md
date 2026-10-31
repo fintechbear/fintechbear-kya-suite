@@ -47,15 +47,16 @@ Reporting through GitHub Private Vulnerability Reporting keeps the discussion
 confidential until a fix is coordinated, and it lets the maintainers request a
 CVE and publish an advisory when the fix ships.
 
-> **OWNER ACTION REQUIRED (before public release):** GitHub Private Vulnerability
-> Reporting must be **enabled** by a repository admin before this policy is
-> accurate for the public repository: in GitHub, go to **Settings -> Code
-> security and analysis -> Private vulnerability reporting -> Enable**. This
-> channel **cannot be verified in the current offline environment** and is
-> **not claimed to be active yet**. A working private reporting channel is
-> **required before public release**; until the admin enables it and confirms
-> the "Report a vulnerability" button appears on the Security tab, treat this
-> channel as pending, not live.
+> **OWNER ACTION (cannot be confirmed in this offline environment):** The
+> repository is published, so the "before public release" gate no longer
+> applies. What remains is confirming that GitHub Private Vulnerability
+> Reporting is **enabled** for the repository: a repository admin enables it in
+> GitHub under **Settings -> Code security and analysis -> Private vulnerability
+> reporting -> Enable**. Whether this channel is currently enabled **cannot be
+> verified from this offline environment**, so it is **not claimed to be active
+> here**. Until you can confirm the "Report a vulnerability" button appears on
+> the repository's Security tab, treat enabling and confirming this channel as a
+> pending owner action.
 
 ## Coordinated disclosure and response
 
@@ -116,7 +117,8 @@ path from a static `PolicyOutcome` to a final `Decision` is the fail-closed
   `kya-crypto` outer-ring crate (Ed25519 per RFC 8032 and JWS-EdDSA per RFC
   7515 / 7518 / 8037). Only Ed25519 / EdDSA is accepted; `alg: none`, HMAC, RSA,
   and ECDSA are rejected. `kya-core` itself still carries no cryptographic
-  algorithm and only defines the trait seam and the sealed mint-point.
+  algorithm and only defines the trait description seam; the verified-evidence
+  mint-points live privately inside `kya-crypto`.
 - **Stage D (online authoritative authorization)** ships as a trait seam
   (`OnlineAuthorizer`) plus the fail-closed `authorize` bridge. The core ships no
   concrete authority, so revocation, cumulative-budget, and replay checks are not

@@ -31,6 +31,11 @@ Steps to reproduce, ideally a minimal code sample:
 // Minimal reproduction.
 ```
 
+<!-- Optional baseline: does the issue reproduce against the primary demo
+(`cargo run -p kya-examples --example demo`)? This helps isolate SDK bugs from
+integration-specific issues. -->
+- [ ] Checked against the primary demo (`cargo run -p kya-examples --example demo`): (yes / no / n/a)
+
 ## Expected behavior
 
 <!-- What you expected to happen. For this SDK, note that a fail-closed Deny is

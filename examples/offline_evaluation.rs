@@ -11,9 +11,11 @@
 //! `VerifiedMandate` can only be minted when the signature covers the exact
 //! mandate being evaluated, so an attacker cannot pair a signature over one
 //! payload with a substituted mandate (Security Check B). An arbitrary
-//! always-`Verified` stand-in verifier also cannot mint trusted evidence,
-//! because only the reviewed, *sanctioned* `kya_crypto::Ed25519SignatureVerifier`
-//! can reach the sealed proof-minting path in `kya-core`.
+//! always-`Verified` stand-in verifier also cannot mint trusted evidence: the
+//! real `kya-crypto` engine is the only path to a `VerifiedMandate`, and its
+//! proof-minting path is owned privately inside `kya-crypto` and bound to the
+//! reviewed `kya_crypto::Ed25519SignatureVerifier`, so an external verifier
+//! cannot reach it.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use ed25519_dalek::{Signer, SigningKey};
@@ -85,9 +87,10 @@ fn main() {
         kya_core::evidence::DelegationClaim::new(issuer.clone(), agent.clone(), key_ref.clone());
 
     // Stage B: run the real cryptographic engine. `verify_mandate` derives the
-    // bytes-to-verify from the mandate's canonical encoding, routes the
-    // sanctioned `Ed25519SignatureVerifier` through the sealed `kya-crypto`
-    // mint-point, checks the trust
+    // bytes-to-verify from the mandate's canonical encoding, runs the real
+    // `kya-crypto` engine whose verified-evidence mint-point is owned privately
+    // inside `kya-crypto` and bound to the reviewed `Ed25519SignatureVerifier`,
+    // checks the trust
     // anchor, audience, validity window, and binding, and finally mints a
     // `VerifiedMandate` only if the signed bytes equal the mandate's canonical
     // encoding. An arbitrary always-true verifier cannot reach this path, and a

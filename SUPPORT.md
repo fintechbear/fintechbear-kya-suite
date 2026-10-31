@@ -14,6 +14,8 @@ Most questions are answered by the documentation:
 
 - [README.md](README.md) - what the SDK does, what it does not do, install, and a
   working Quick Start.
+- [docs/demo.md](docs/demo.md) - the recommended primary demo walkthrough with
+  real captured output (`cargo run -p kya-examples --example demo`).
 - [docs/quickstart.md](docs/quickstart.md) - a step-by-step quick start.
 - [docs/api-usage.md](docs/api-usage.md) - the public facade surface, task by task.
 - [docs/architecture.md](docs/architecture.md) - the five-stage model and crate layering.

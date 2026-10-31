@@ -95,22 +95,25 @@ trusting authenticity only, never current authority.
   speak to present state.
 - **A malicious verifier cannot promote an untrusted key.** Trust is established
   independently of authenticity, and the forgery vector is now closed from two
-  directions. First, the sealed `verify_signature` mint-point accepts **only a
-  sanctioned verifier** (a sealed `SanctionedVerifier` trait plus an unforgeable
-  `VerifierSanction` capability token), so an arbitrary `SignatureVerifier` that
-  always returns `Verified` cannot even be passed to it — that is a compile
-  error, not a runtime check — and the single blessed implementor is
-  `kya_crypto::Ed25519SignatureVerifier`. Second, even a legitimately-obtained
+  directions. First, the verified-evidence mint-points live **privately inside
+  `kya-crypto`** bound to its one concrete verifier: the crate-private
+  `run_verifier` takes `&Ed25519SignatureVerifier` by concrete type, so an
+  arbitrary `SignatureVerifier` that always returns `Verified` cannot be passed
+  to it at all and has no path — public or `#[doc(hidden)]` — to mint a verified
+  outcome. `kya-core` holds only the `SignatureVerifier` description seam and
+  cannot name or reach those mint-points. Second, even a legitimately-obtained
   authenticity outcome is not trust: `VerifiedDelegation::establish` re-checks,
   on its own, that the verifying `(issuer, key_ref)` pair is anchored in
   `TrustAnchors`, so a resolvable-but-unanchored key still fails closed with
   `EvidenceError::UntrustedKey`, and the concrete `kya-crypto` engine
   additionally requires the pair to resolve in the explicit `TrustedKeyStore`.
   Neither a dishonest verifier nor a resolvable-but-unanchored key can cross the
-  trust boundary. This is locked in by
-  `malicious_always_verified_verifier_cannot_promote_untrusted_key`
-  (`kya-core/src/evidence.rs`), the external-crate
-  `kya-crypto/tests/forgery_regression.rs`, and the untrusted-key cases in
+  trust boundary. This is locked in by the external-crate
+  `kya-crypto/tests/forgery_regression.rs`
+  (`malicious_verifier_answer_is_inert`,
+  `anchored_key_with_bad_signature_still_fails_closed`), the
+  `delegation_rejects_untrusted_key_even_when_signature_verifies` unit test in
+  `kya-crypto/src/evidence.rs`, and the untrusted-key cases in
   `kya-crypto/tests/engine_security.rs`.
 - For the AP2 adapter, issuer/credential-authority mapping onto `TrustAnchors`
   and the exact key-distribution mechanics are an open implementation question
@@ -221,8 +224,8 @@ grounded in the current code:
   issuer, untrusted key, audience mismatch, expired, not-yet-valid, binding
   mismatch, malformed payload, oversized input), each mapping to a stable
   `ErrorCode`, with no secrets in any message. A `Verified` outcome is minted
-  **only** by the sealed `verify_signature` mint-point and cannot be fabricated
-  by an untrusted caller.
+  **only** by the crate-private mint-point inside `kya-crypto` (bound to its one
+  concrete verifier) and cannot be fabricated by an untrusted caller.
 - **Static policy (stage C)** returns a `PolicyOutcome` that is either `Passed`
   or `Rejected` with a `ReasonCode` (for example action-not-permitted,
   amount-exceeds-limit, agent-mismatch, currency-mismatch). `Passed` is not an
