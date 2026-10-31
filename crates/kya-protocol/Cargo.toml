@@ -1,0 +1,17 @@
+[package]
+name = "kya-protocol"
+description = "Language-independent protocol surface for the FintechBear KYA SDK: version marker and wire-level mandate/request shapes referencing kya-core domain types."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+kya-core = { path = "../kya-core", version = "0.1.0" }

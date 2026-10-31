@@ -1,0 +1,5 @@
+# Stable-only rustfmt configuration.
+# Every option here is accepted by stable rustfmt so that
+# `cargo fmt --all -- --check` passes without a nightly toolchain.
+edition = "2021"
+max_width = 100

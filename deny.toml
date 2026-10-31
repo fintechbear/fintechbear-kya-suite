@@ -1,0 +1,81 @@
+# cargo-deny configuration for the FintechBear KYA SDK.
+#
+# This file is a reviewed supply-chain policy (AGENTS.md Rules 11, 13, 18, 20).
+# It is consumed by `cargo deny check` (advisories, bans, licenses, sources).
+# Every allow/deny choice below is deliberate and documented. When a new
+# dependency is added, this file MUST be revisited: a new license or source is
+# a conscious review decision, never an automatic acceptance.
+#
+# Generated/verified against the actual dependency tree at the time of the
+# Phase-7 audit. The only external dependency is `ed25519-dalek` and its
+# transitive tree (see `cargo tree`); the six `kya-*` crates are first-party.
+
+# ---------------------------------------------------------------------------
+# Advisories: vulnerability / unmaintained / yanked policy.
+# ---------------------------------------------------------------------------
+# The advisory database (RustSec https://github.com/RustSec/advisory-db) is
+# fetched from the network. In an offline CI/sandbox the fetch fails; that is a
+# NOT-RUN condition recorded in the audit notes, NOT a policy relaxation. When
+# the database is reachable, known vulnerabilities and unmaintained crates are
+# treated as hard failures (deny), consistent with deny-by-default (Rule 9).
+[advisories]
+# `version = 2` advisory semantics: `vulnerability`/`unmaintained`/`unsound`/
+# `yanked` are no longer individually configurable fields; in v2 they default to
+# `deny`, which is exactly the fail-closed posture we want. We keep an empty
+# ignore list so no advisory is silently suppressed.
+version = 2
+ignore = []
+
+# ---------------------------------------------------------------------------
+# Licenses: explicit allow-list of the licenses actually present in the tree.
+# ---------------------------------------------------------------------------
+# Confirmed via `cargo deny list` against the current Cargo.lock. Each license
+# below is a permissive, OSI-approved license compatible with this project's
+# own `MIT OR Apache-2.0` dual license. No copyleft (GPL/AGPL/LGPL/MPL) license
+# appears in the tree and none is allowed here; adding one would require an
+# explicit review and an ADR.
+[licenses]
+# SPDX identifiers for every license observed in the dependency graph:
+#   - MIT, Apache-2.0: the dual license of this project and most of the tree.
+#   - BSD-3-Clause:    curve25519-dalek, ed25519-dalek, subtle.
+#   - BSD-1-Clause:    fiat-crypto (a curve25519-dalek backend dependency).
+#   - Unicode-3.0:     unicode-ident's data tables.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "BSD-1-Clause",
+    "Unicode-3.0",
+]
+# Only count a license as "allowed by a lower confidence threshold" when the
+# detected text is a very strong match; otherwise require explicit handling.
+confidence-threshold = 0.9
+
+# ---------------------------------------------------------------------------
+# Bans: crate-level policy (duplicates, wildcards, specific denies).
+# ---------------------------------------------------------------------------
+[bans]
+# Multiple versions of the same crate are a review signal (bloat / divergent
+# audited code), warned rather than hard-denied for v0.1 since the tree is tiny
+# and currently duplicate-free (`cargo deny check bans` = ok).
+multiple-versions = "warn"
+# Wildcard (`*`) version requirements defeat reproducible, pinned builds
+# (Rule 13). None exist today; deny so one cannot be introduced unnoticed.
+wildcards = "deny"
+# No crates are explicitly banned at this time. `unsafe`-heavy or unmaintained
+# crates would be listed here after review.
+deny = []
+# No forced allow-list of crates: the license + advisory gates plus the minimal
+# tree are the control. Kept empty deliberately.
+allow = []
+
+# ---------------------------------------------------------------------------
+# Sources: where crates may come from.
+# ---------------------------------------------------------------------------
+# Only the canonical crates.io registry is permitted. Unknown registries and
+# unknown git sources are denied so a dependency cannot be silently pulled from
+# an unreviewed origin (Rule 11: explicit, allow-listed trust).
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

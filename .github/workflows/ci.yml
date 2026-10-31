@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Least privilege: the quality gates only need to read the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gates:
+    name: fmt / clippy / test / doc / examples
+    # Cross-platform matrix: the SDK is verified on all three major
+    # GitHub-hosted runners. fail-fast is disabled so one OS failing does not
+    # cancel the others, which keeps the full cross-platform signal visible.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # actions/checkout v4.2.2 pinned to commit SHA.
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # dtolnay/rust-toolchain pinned to commit SHA; installs stable + components.
+      # stable matches the project's rust-toolchain.toml / MSRV expectations.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (warnings as errors)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace --all-features
+
+      # Doctest gate kept explicit in addition to the combined run above, so a
+      # regression in the kya-crypto compile-fail/positive doctests is obvious.
+      - name: Doctests
+        run: cargo test --doc --workspace
+
+      - name: Docs (warnings as errors)
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --workspace --no-deps
+
+      # Build every runnable example so the public-facing demos never bit-rot.
+      - name: Examples
+        run: cargo build -p kya-examples --examples
+
+  # Dependency hygiene: licenses, banned crates, sources, and the RustSec
+  # advisory database. Runs only on ubuntu because the advisories check needs
+  # network access to the RustSec advisory DB, which GitHub-hosted runners have.
+  cargo-deny:
+    name: cargo-deny (licenses / bans / sources / advisories)
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2 pinned to commit SHA (reused, no new SHA).
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # dtolnay/rust-toolchain pinned to commit SHA (reused, no new SHA).
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: stable
+
+      # No pre-pinned cargo-deny action SHA is available in this repo, so we
+      # install the tool from crates.io with --locked rather than invent an
+      # action commit hash. Swap to a SHA-pinned action only if the owner
+      # supplies a reviewed SHA.
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      # Run all four checks. licenses/bans/sources are hard gates and MUST NOT
+      # be disabled. advisories needs the RustSec DB (network, available here on
+      # the GitHub-hosted runner); it is treated as a hard gate too so a new
+      # vulnerability fails CI. Loosen advisories ONLY via deny.toml with a
+      # documented, reviewed exception, never by dropping the check.
+      - name: cargo deny check
+        run: cargo deny check licenses bans sources advisories

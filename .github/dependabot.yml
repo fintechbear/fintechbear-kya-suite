@@ -1,0 +1,33 @@
+# Dependabot configuration for the FintechBear KYA SDK.
+#
+# Keeps the single external dependency tree (ed25519-dalek and its transitive
+# crates) and the SHA-pinned GitHub Actions current. Consistent with the
+# least-privilege CI (permissions: contents: read in .github/workflows/ci.yml):
+# Dependabot opens pull requests, which the existing CI quality gates then
+# evaluate; it grants no additional workflow privileges.
+version: 2
+updates:
+  # Rust crates across the Cargo workspace (root manifest drives the workspace).
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+      - "rust"
+
+  # GitHub Actions used by the CI workflow. Dependabot proposes updated commit
+  # SHAs for the pinned actions; it never unpins them.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - "dependencies"
+      - "github-actions"

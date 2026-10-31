@@ -1,0 +1,31 @@
+[package]
+name = "kya-sdk"
+description = "Ergonomic public facade for the FintechBear KYA SDK. Re-exports a curated, stable surface over kya-core, kya-crypto, and kya-client so a consumer can configure explicit trust, verify a real issuer signature, inspect the authenticated mandate, evaluate static policy, and reach the fail-closed online-authorization bridge without learning the internal module layout. Adds no I/O, no account/subscription/network/DB/cloud/payment dependency, and no constructor that mints verified evidence without real verification."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# In-repo inward dependencies only (Clean Architecture, AGENTS.md Rule 2). The
+# facade is the outermost ring: it re-exports the domain core, the concrete
+# stage-B engine, and the stage-D bridge. It adds NO HTTP/DB/cloud/endpoint
+# dependency and NO new third-party dependency (Rule 13): every capability it
+# surfaces already exists in these crates.
+kya-core = { path = "../kya-core", version = "0.1.0" }
+kya-crypto = { path = "../kya-crypto", version = "0.1.0" }
+kya-client = { path = "../kya-client", version = "0.1.0" }
+
+[dev-dependencies]
+# Test-only: the integration test must produce a genuine Ed25519 signature so
+# the verify path routes through the real kya-crypto engine (verified evidence
+# can never be fabricated from a stand-in). Pinned to match kya-crypto. Not a
+# library dependency.
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }

@@ -1,0 +1,75 @@
+# cargo-fuzz harness crate for the FintechBear KYA SDK.
+#
+# This is a COVERAGE-GUIDED fuzzing harness (libFuzzer via `cargo fuzz`),
+# distinct from the deterministic `SplitMix64` property loops in
+# `crates/kya-crypto/tests/property_fuzz.rs` and `crates/kya-core/tests/*`
+# (those are fixed-seed pseudo-random loops, NOT coverage-guided fuzzing; see
+# the audit notes). The targets here drive the security-critical untrusted-input
+# parsers so a real fuzzer can explore the input space over time.
+#
+# IMPORTANT: this crate carries its OWN `[workspace]` table so it is NOT a member
+# of the root workspace. That keeps the Rule 16 gates (`cargo fmt/clippy/test/doc
+# --workspace`) from trying to build it, which matters because:
+#   1. `cargo fuzz` requires a nightly toolchain + libFuzzer, which is not
+#      available on the stable MSVC Windows host used for the gates; and
+#   2. it depends on `libfuzzer-sys`, which is intended for the fuzzing build.
+# On a Linux CI host with a nightly toolchain, run from the repo root:
+#   cargo install cargo-fuzz
+#   cargo +nightly fuzz run fuzz_b64url_decode    -- -max_total_time=60
+#   cargo +nightly fuzz run fuzz_jws_verify       -- -max_total_time=60
+#   cargo +nightly fuzz run fuzz_mandate_binding  -- -max_total_time=60
+#   cargo +nightly fuzz run fuzz_verify_delegation -- -max_total_time=60
+
+[package]
+name = "kya-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Own workspace table: excludes this crate from the root workspace so the
+# stable-host gates never attempt to compile the libFuzzer targets.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+kya-core = { path = "../crates/kya-core" }
+kya-crypto = { path = "../crates/kya-crypto" }
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }
+
+[[bin]]
+name = "fuzz_b64url_decode"
+path = "fuzz_targets/fuzz_b64url_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_jws_verify"
+path = "fuzz_targets/fuzz_jws_verify.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_mandate_binding"
+path = "fuzz_targets/fuzz_mandate_binding.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_verify_delegation"
+path = "fuzz_targets/fuzz_verify_delegation.rs"
+test = false
+doc = false
+bench = false
+
+# Release-ish profile with debug assertions on: a fuzzer must catch arithmetic
+# overflow / debug-assert failures, which a plain release build would mask.
+[profile.release]
+debug = 1
+debug-assertions = true
+overflow-checks = true

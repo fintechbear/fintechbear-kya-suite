@@ -1,0 +1,20 @@
+# Issue chooser configuration for the FintechBear KYA SDK.
+#
+# Security reports MUST NOT be filed as public issues. Blank issues are disabled
+# so reporters pick a template (or one of the contact links below), which keeps
+# security reports out of the public tracker.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/fintechbear/fintechbear-kya-suite/security/advisories/new
+    about: >-
+      Do NOT open a public issue for a security problem. Report suspected
+      vulnerabilities privately via GitHub Private Vulnerability Reporting
+      (Security tab -> "Report a vulnerability"). See SECURITY.md for the full
+      policy.
+  - name: Question or usage help
+    url: https://github.com/fintechbear/fintechbear-kya-suite/discussions
+    about: >-
+      For questions and usage help, please open a Discussion (or read the docs
+      in README.md and docs/). The issue tracker is for bugs and feature
+      requests.

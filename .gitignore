@@ -1,0 +1,34 @@
+# Rust build output
+/target
+**/*.rs.bk
+*.pdb
+
+# IDE / editor directories
+/.idea/
+/.vs/
+
+# Local agent / editor tooling and internal task data (never published)
+.kiro/
+.agents/
+
+# Temporary and machine-specific artifacts (never published)
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.release-snapshot-*/
+
+# Secrets and credential material (never commit these)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+# Generated test secrets / local credentials
+*.secret
+generated-secrets/
+
+# Note: Cargo.lock is intentionally NOT ignored. This workspace ships
+# binaries/examples, and a committed lockfile gives reproducible builds.

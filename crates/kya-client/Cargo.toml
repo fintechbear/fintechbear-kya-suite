@@ -1,0 +1,27 @@
+[package]
+name = "kya-client"
+description = "Online authoritative authorization seam (stage D) and external-integration client traits for the FintechBear KYA SDK, with a fail-closed authorize bridge. No concrete HTTP/DB/cloud transports."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+kya-core = { path = "../kya-core", version = "0.1.0" }
+kya-protocol = { path = "../kya-protocol", version = "0.1.0" }
+
+[dev-dependencies]
+# Test-only: the end-to-end suite needs genuine verified delegation evidence,
+# which can ONLY be produced by routing a real signature through the sanctioned
+# kya-crypto engine (the verified-evidence seal forbids fabricating it from a
+# stand-in verifier). kya-crypto is an outer-ring crate; this is a dev-only
+# dependency and does not make kya-client depend on concrete crypto at runtime.
+kya-crypto = { path = "../kya-crypto", version = "0.1.0" }
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }

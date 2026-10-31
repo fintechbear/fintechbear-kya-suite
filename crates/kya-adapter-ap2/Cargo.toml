@@ -1,0 +1,29 @@
+[package]
+name = "kya-adapter-ap2"
+description = "Outer-ring adapter that models AP2-style mandate CONSTRAINT concepts (permitted action, exact amount, currency, identities) as explicit Rust types and maps them onto the kya-core Mandate/Scope/Money domain so the existing stage-C evaluator runs unchanged, routing signature verification through kya-crypto over caller-supplied EXACT bytes. It implements only independently-verifiable primitives: it parses NO real AP2 signature envelope, invents NO wire canonicalization or endpoints, claims NO AP2 wire compatibility or certification, and never produces an authorization. Depends inward on kya-core (and kya-crypto as the stage-B primitive)."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# In-repo inward dependencies only (Clean Architecture, AGENTS.md Rule 2). This
+# crate is an outer ring: it depends on the domain core and reuses the existing
+# concrete crypto engine as the stage-B primitive. It adds NO HTTP/DB/cloud/
+# endpoint dependency and NO new third-party dependency (Rule 13): everything it
+# needs is already provided by kya-core and kya-crypto.
+kya-core = { path = "../kya-core", version = "0.1.0" }
+kya-crypto = { path = "../kya-crypto", version = "0.1.0" }
+
+[dev-dependencies]
+# Deterministic Ed25519 signing in tests only, matching the rest of the
+# workspace's test pattern (SigningKey::from_bytes(&[seed; 32])). This is a
+# dev-dependency: it never ships in the adapter's own compiled surface.
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }

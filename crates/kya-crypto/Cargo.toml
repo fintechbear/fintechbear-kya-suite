@@ -1,0 +1,48 @@
+[package]
+name = "kya-crypto"
+description = "Concrete outer-ring cryptographic verification engine for the FintechBear KYA SDK: Ed25519 and JWS-EdDSA signature verification over exact protocol-defined bytes, with explicit trust-anchored key resolution. Depends inward on kya-core; kya-core itself holds no crypto dependency."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# In-repo inward dependency only. This crate is an outer ring: it provides the
+# concrete cryptography that kya-core deliberately refuses to carry, and it
+# depends inward on the domain core (Clean Architecture, AGENTS.md Rule 2).
+kya-core = { path = "../kya-core", version = "0.1.0" }
+
+# ed25519-dalek: Ed25519 signature verification (RFC 8032).
+#   Justification: Rule 10 forbids inventing cryptographic algorithms; this is
+#     the de-facto standard, widely reviewed pure-Rust Ed25519 implementation
+#     from the RustCrypto/dalek ecosystem. We use ONLY its verification path.
+#   License: dual MIT OR Apache-2.0 (compatible with this workspace's license).
+#   Security rationale: implements RFC 8032. We verify via the STRICT path
+#     (`VerifyingKey::verify_strict`), which rejects signature malleability
+#     (non-canonical `S`) and small-order / non-canonical public keys, rather
+#     than the permissive `Verifier::verify`. `verify_strict` is an inherent
+#     method on `VerifyingKey` available with the enabled feature set below (it
+#     is not behind a separate feature gate), so no extra feature is required.
+#     The crate exposes verification without us touching raw curve math. The
+#     crate may use `unsafe` transitively; that is acceptable for a reviewed
+#     DEPENDENCY. kya-crypto's OWN code still begins with #![forbid(unsafe_code)]
+#     and this dependency is NOT added to kya-core.
+#   Minimal surface: default features disabled; only `std` (error trait +
+#     allocation-free verification) is enabled. No `rand`, no `serde`, no `pkcs8`.
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }
+
+# NOTE on base64url: no base64 crate is pulled in. Strict, length-checked
+# base64url (RFC 4648 §5, no padding) decoding is implemented in-crate
+# (`b64url` module) to keep the dependency set minimal (Rule 13) and to keep the
+# untrusted-input decoder fully under our own non-panicking control.
+#
+# NOTE on JWT: no JWT framework is pulled in. The compact-JWS parse/verify is
+# implemented directly against an explicit EdDSA-only algorithm allowlist to
+# avoid algorithm-confusion-prone libraries (alg:none, HMAC/RSA confusion).

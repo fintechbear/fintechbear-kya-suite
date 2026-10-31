@@ -1,0 +1,76 @@
+[package]
+name = "kya-examples"
+description = "Runnable examples for the FintechBear KYA SDK. Not published; library crates never depend on this."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+kya-core = { path = "../crates/kya-core", version = "0.1.0" }
+kya-client = { path = "../crates/kya-client", version = "0.1.0" }
+kya-crypto = { path = "../crates/kya-crypto", version = "0.1.0" }
+# The curated public facade (FEAT-004). Examples 1-9 consume ONLY this surface,
+# demonstrating the external-consumer entry point.
+kya-sdk = { path = "../crates/kya-sdk", version = "0.1.0" }
+# The experimental AP2 adapter. Deliberately NOT part of the facade, so example
+# 10 depends on it directly to show its honestly-documented functionality.
+kya-adapter-ap2 = { path = "../crates/kya-adapter-ap2", version = "0.1.0" }
+
+[dev-dependencies]
+# Example-only: used to produce a genuine Ed25519 signature so the demos route
+# through the real kya-crypto engine rather than a stand-in verifier. Pinned to
+# match kya-crypto's dependency. Not a library dependency. Available to
+# [[example]] targets of this crate.
+ed25519-dalek = { version = "2.2.0", default-features = false, features = ["std"] }
+
+[[example]]
+name = "offline_evaluation"
+path = "offline_evaluation.rs"
+
+[[example]]
+name = "example_01_configure_trust"
+path = "example_01_configure_trust.rs"
+
+[[example]]
+name = "example_02_verify_signed_evidence"
+path = "example_02_verify_signed_evidence.rs"
+
+[[example]]
+name = "example_03_reject_tampered_payload"
+path = "example_03_reject_tampered_payload.rs"
+
+[[example]]
+name = "example_04_reject_unknown_issuer"
+path = "example_04_reject_unknown_issuer.rs"
+
+[[example]]
+name = "example_05_verify_delegation_evidence"
+path = "example_05_verify_delegation_evidence.rs"
+
+[[example]]
+name = "example_06_evaluate_valid_scope"
+path = "example_06_evaluate_valid_scope.rs"
+
+[[example]]
+name = "example_07_reject_over_limit"
+path = "example_07_reject_over_limit.rs"
+
+[[example]]
+name = "example_08_reject_currency_mismatch"
+path = "example_08_reject_currency_mismatch.rs"
+
+[[example]]
+name = "example_09_missing_online_state"
+path = "example_09_missing_online_state.rs"
+
+[[example]]
+name = "example_10_ap2_adapter"
+path = "example_10_ap2_adapter.rs"

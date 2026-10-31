@@ -1,0 +1,68 @@
+# Coverage-guided fuzz build (and short bounded runs) for the KYA SDK.
+#
+# WHY A SEPARATE WORKFLOW: coverage-guided fuzzing (cargo-fuzz + libFuzzer)
+# requires a nightly toolchain and libFuzzer, which cannot run on the stable
+# Windows/MSVC host used for local development, so it is split out onto a Linux
+# runner here. The deterministic SplitMix64 property loops in the test tree
+# (crates/kya-crypto/tests/property_fuzz.rs, crates/kya-core/tests/*) are
+# fixed-seed pseudo-random suites and are NOT coverage-guided fuzzing; this
+# workflow is what actually exercises libFuzzer against the untrusted-input
+# parsers.
+#
+# The fuzz/ crate carries its own [workspace] table, so it is NOT a member of
+# the root workspace. `cargo fuzz` is invoked from the repo root and discovers
+# fuzz/ automatically.
+
+name: Fuzz
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Least privilege: building the fuzz targets only needs read access.
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz-build:
+    name: cargo-fuzz build (nightly, ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2 pinned to commit SHA (reused, no new SHA).
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # dtolnay/rust-toolchain pinned to commit SHA (reused, no new SHA).
+      # nightly is required: cargo-fuzz / libFuzzer need nightly features.
+      - name: Install Rust nightly toolchain
+        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: nightly
+
+      # No pre-pinned cargo-fuzz action SHA is available, so install the tool
+      # from crates.io with --locked rather than invent an action commit hash.
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      # Build all four libFuzzer targets. This alone catches breakage in the
+      # fuzz harness and the parsers it drives.
+      - name: Build fuzz targets
+        run: |
+          cargo +nightly fuzz build fuzz_b64url_decode
+          cargo +nightly fuzz build fuzz_jws_verify
+          cargo +nightly fuzz build fuzz_mandate_binding
+          cargo +nightly fuzz build fuzz_verify_delegation
+
+      # Short bounded coverage-guided sessions. Time-boxed so CI stays fast;
+      # extend the budget for deeper campaigns outside of per-commit CI.
+      - name: Run bounded fuzz sessions
+        run: |
+          cargo +nightly fuzz run fuzz_b64url_decode    -- -max_total_time=60
+          cargo +nightly fuzz run fuzz_jws_verify       -- -max_total_time=60
+          cargo +nightly fuzz run fuzz_mandate_binding  -- -max_total_time=60
+          cargo +nightly fuzz run fuzz_verify_delegation -- -max_total_time=60

@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/kya-core",
+    "crates/kya-protocol",
+    "crates/kya-client",
+    "crates/kya-crypto",
+    "crates/kya-adapter-ap2",
+    "crates/kya-sdk",
+    "examples",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+authors = ["FintechBear KYA Contributors"]
+repository = "https://github.com/fintechbear/fintechbear-kya-suite"
+homepage = "https://github.com/fintechbear/fintechbear-kya-suite"
+version = "0.1.0"
+
+# Workspace-wide lints. These apply to every member crate via
+# `[lints] workspace = true`. Unsafe code is forbidden workspace-wide.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[workspace.lints.clippy]
+# Keep the security-sensitive paths honest: no silent panics.
+unwrap_used = "warn"
+expect_used = "warn"
