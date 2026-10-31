@@ -40,7 +40,7 @@ jobs:
       # dtolnay/rust-toolchain pinned to commit SHA (reused, no new SHA).
       # nightly is required: cargo-fuzz / libFuzzer need nightly features.
       - name: Install Rust nightly toolchain
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
         with:
           toolchain: nightly
 
